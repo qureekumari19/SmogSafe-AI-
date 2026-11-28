@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VayuSaathi — Winter Smog & Air Quality Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌫️</text></svg>" />
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+<header class="border-b border-slate-800 bg-slate-900/70 backdrop-blur sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex flex-wrap items-center justify-between gap-4">
+        <div>
+            <h1 class="text-xl font-bold text-teal-400 flex items-center gap-2">
+                <span>🌫️</span> VayuSaathi <span class="text-xs font-normal px-2 py-0.5 rounded bg-teal-950 text-teal-300 border border-teal-800">GenAI Smog Navigator</span>
+            </h1>
+            <p class="text-xs text-slate-400">Tailored low-emission routines, indoor air hacks & impact transparency for families and communities</p>
+        </div>
+        <div id="headerAqiPill" class="hidden text-sm px-3 py-1.5 rounded-full font-semibold border"></div>
+    </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <!-- Left Sidebar: Household & Community Profile -->
+    <section class="lg:col-span-4 space-y-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+            <h2 class="text-base font-semibold text-white mb-3">1. Your Location & Lifestyle</h2>
+            <form id="profileForm" class="space-y-3 text-sm">
+                <div>
+                    <label class="block text-slate-400 mb-1">City / Urban Area</label>
+                    <input id="city" type="text" required value="Delhi"
+                           class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-teal-500" />
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Household Members & Vulnerabilities</label>
+                    <input id="household_members" type="text" required value="2 adults, 1 child (6 yrs), 1 senior with mild asthma"
+                           class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-teal-500" />
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Housing & Ventilation</label>
+                    <input id="housing_type" type="text" required value="2nd floor apartment near busy road, sliding windows"
+                           class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-teal-500" />
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Daily Commute & Errands</label>
+                    <input id="commute_habit" type="text" required value="14 km daily solo car commute + morning school drop-off"
+                           class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-teal-500" />
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Cooking & Indoor Habits</label>
+                    <input id="cooking_and_energy" type="text" required value="Gas stove without exhaust chimney, daily morning incense"
+                           class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-teal-500" />
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-slate-400 mb-1">Budget Tier</label>
+                        <select id="budget_tier" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white">
+                            <option value="Low-cost / DIY preferred">Low-cost / DIY</option>
+                            <option value="Moderate" selected>Moderate</option>
+                            <option value="Flexible">Flexible</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">Role</label>
+                        <select id="community_role" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white">
+                            <option value="Family" selected>Family</option>
+                            <option value="RWA / Neighborhood Lead">RWA / Community</option>
+                            <option value="School Coordinator">School</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button id="submitBtn" type="submit"
+                        class="w-full mt-2 bg-teal-500 hover:bg-teal-400 text-slate-950 font-semibold py-2.5 rounded-xl transition cursor-pointer">
+                    Analyze Live Air & Build Plan
+                </button>
+            </form>
+        </div>
+
+        <!-- Interactive Q&A Box -->
+        <div id="chatCard" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+            <h2 class="text-base font-semibold text-white mb-2">Ask VayuSaathi</h2>
+            <p class="text-xs text-slate-400 mb-3">Ask about outdoor sports timing, DIY filters, or neighborhood waste-burning alternatives.</p>
+            <div id="chatLog" class="space-y-2 max-h-60 overflow-y-auto mb-3 text-xs"></div>
+            <form id="chatForm" class="flex gap-2">
+                <input id="chatInput" type="text" placeholder="e.g., Is 4 PM safe for my kid's football?"
+                       class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-teal-500" />
+                <button type="submit" class="bg-slate-800 hover:bg-slate-700 text-teal-300 px-3 py-2 rounded-lg text-xs font-semibold">Ask</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Right Content Area -->
+    <section class="lg:col-span-8 space-y-6">
+        <!-- Placeholder State -->
+        <div id="emptyState" class="bg-slate-900/60 border border-dashed border-slate-800 rounded-2xl p-12 text-center">
+            <p class="text-lg font-medium text-slate-300">Ready to build your winter smog survival & emission-reduction plan</p>
+            <p class="text-sm text-slate-500 mt-1">Enter your city and household profile on the left to fetch live air telemetry and personalized GenAI guidance.</p>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
+            <div class="animate-pulse text-teal-400 font-semibold">Fetching live AQI telemetry & tailoring your plan with Gemini...</div>
+        </div>
+
+        <!-- Results Container -->
+        <div id="results" class="hidden space-y-6">
+            <!-- Live Telemetry Strip -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                    <div class="text-xs text-slate-400">US AQI</div>
+                    <div id="metricAqi" class="text-2xl font-bold mt-1">--</div>
+                    <div id="metricCat" class="text-xs text-slate-400 mt-0.5">--</div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                    <div class="text-xs text-slate-400">PM2.5 / PM10</div>
+                    <div id="metricPm" class="text-xl font-bold text-white mt-1">--</div>
+                    <div class="text-xs text-slate-500 mt-0.5">WHO 24h limit: 15 µg/m³</div>
+                </div>
+                <div class="bg-slate-900 border border-emerald-900/60 rounded-xl p-4">
+                    <div class="text-xs text-emerald-400 font-medium">Cleanest 2h Window</div>
+                    <div id="metricBest" class="text-sm font-semibold text-white mt-1">--</div>
+                </div>
+                <div class="bg-slate-900 border border-rose-900/60 rounded-xl p-4">
+                    <div class="text-xs text-rose-400 font-medium">Peak Inversion Risk</div>
+                    <div id="metricPeak" class="text-sm font-semibold text-white mt-1">--</div>
+                </div>
+            </div>
+
+            <!-- Severity & Health Alert -->
+            <div class="bg-slate-900 border border-amber-800/50 rounded-2xl p-5">
+                <div class="text-xs uppercase tracking-wider text-amber-400 font-semibold mb-1">Today's Risk Briefing</div>
+                <p id="severitySummary" class="text-sm text-slate-200"></p>
+                <p id="healthAlert" class="text-sm text-amber-200/90 mt-2 font-medium"></p>
+            </div>
+
+            <!-- Interactive Impact Simulator -->
+            <div class="bg-gradient-to-br from-slate-900 to-teal-950/30 border border-teal-800/60 rounded-2xl p-5">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+                    <div>
+                        <h3 class="text-base font-semibold text-teal-300">Direct Impact Simulator</h3>
+                        <p class="text-xs text-slate-400">Toggle actions below to see how your family's choices reduce indoor inhalation and community smog</p>
+                    </div>
+                    <div class="flex gap-4 text-right">
+                        <div>
+                            <div class="text-xs text-slate-400">Est. Indoor PM2.5 Cut</div>
+                            <div id="simIndoorCut" class="text-xl font-bold text-emerald-400">0%</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-slate-400">Monthly Smog Avoided</div>
+                            <div id="simEmissionCut" class="text-xl font-bold text-teal-300">0 g PM2.5 / 0 kg CO₂e</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Daily Low-Emission Routine -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <h3 class="text-base font-semibold text-white mb-3">2. Low-Emission Daily Routine</h3>
+                <div id="routineList" class="space-y-3"></div>
+            </div>
+
+            <!-- Indoor Air Quality Hacks -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <h3 class="text-base font-semibold text-white mb-3">3. Indoor Air Quality Hacks (Check to simulate impact)</h3>
+                <div id="iaqList" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            </div>
+
+            <!-- Sustainable Alternatives -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+                <h3 class="text-base font-semibold text-white mb-3">4. Sustainable Family & Community Swaps (Check to simulate impact)</h3>
+                <div id="swapsList" class="space-y-3"></div>
+                <div class="mt-4 p-4 rounded-xl bg-teal-950/40 border border-teal-900 text-sm text-teal-200">
+                    <span class="font-semibold text-teal-400">Community Multiplier: </span>
+                    <span id="communityNudge"></span>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    let latestContext = { city: "", aqiSummary: "", profileSummary: "" };
+    let currentHacks = [];
+    let currentSwaps = [];
+
+    function aqiBadgeClass(aqi) {
+      if (aqi <= 50) return "text-emerald-300 border-emerald-700 bg-emerald-950";
+      if (aqi <= 100) return "text-yellow-300 border-yellow-700 bg-yellow-950";
+      if (aqi <= 150) return "text-orange-300 border-orange-700 bg-orange-950";
+      if (aqi <= 200) return "text-rose-300 border-rose-700 bg-rose-950";
+      return "text-purple-300 border-purple-700 bg-purple-950";
+    }
+
+    function recalculateImpact() {
+      // Combine independent IAQ filtration probabilities: 1 - product(1 - p_i)
+      let remainingFraction = 1.0;
+      document.querySelectorAll(".hack-toggle:checked").forEach(cb => {
+        const pct = Number(cb.dataset.pct || 0) / 100;
+        remainingFraction *= (1 - pct);
+      });
+      const combinedIndoorReduction = Math.round((1 - remainingFraction) * 100);
+
+      let totalPm = 0;
+      let totalCo2 = 0;
+      document.querySelectorAll(".swap-toggle:checked").forEach(cb => {
+        totalPm += Number(cb.dataset.pm || 0);
+        totalCo2 += Number(cb.dataset.co2 || 0);
+      });
+
+      document.getElementById("simIndoorCut").textContent = `${combinedIndoorReduction}%`;
+      document.getElementById("simEmissionCut").textContent = `${totalPm.toFixed(1)} g PM2.5 / ${totalCo2.toFixed(1)} kg CO₂e`;
+    }
+
+    document.getElementById("profileForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      document.getElementById("emptyState").classList.add("hidden");
+      document.getElementById("results").classList.add("hidden");
+      document.getElementById("loadingState").classList.remove("hidden");
+
+      const payload = {
+        city: document.getElementById("city").value,
+        household_members: document.getElementById("household_members").value,
+        housing_type: document.getElementById("housing_type").value,
+        commute_habit: document.getElementById("commute_habit").value,
+        cooking_and_energy: document.getElementById("cooking_and_energy").value,
+        budget_tier: document.getElementById("budget_tier").value,
+        community_role: document.getElementById("community_role").value,
+      };
+
+      try {
+        const res = await fetch("/api/plan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.detail || "Failed to generate plan");
+        }
+        const data = await res.json();
+        renderDashboard(data, payload);
+      } catch (err) {
+        alert("Error: " + err.message);
+      } finally {
+        document.getElementById("loadingState").classList.add("hidden");
+      }
+    });
+
+    function renderDashboard(data, payload) {
+      const aq = data.air_quality;
+      const plan = data.plan;
+
+      latestContext = {
+        city: aq.location,
+        aqiSummary: `US AQI ${aq.us_aqi} (${aq.aqi_category}), PM2.5 ${aq.pm2_5} µg/m³, Cleanest window ${aq.cleanest_window_24h}`,
+        profileSummary: `${payload.household_members}; ${payload.housing_type}; ${payload.commute_habit}; ${payload.cooking_and_energy}`,
+      };
+
+      const pill = document.getElementById("headerAqiPill");
+      pill.className = `text-sm px-3 py-1.5 rounded-full font-semibold border ${aqiBadgeClass(aq.us_aqi)}`;
+      pill.textContent = `${aq.location} • AQI ${aq.us_aqi ?? "N/A"}`;
+      pill.classList.remove("hidden");
+
+      document.getElementById("metricAqi").textContent = aq.us_aqi ?? "N/A";
+      document.getElementById("metricCat").textContent = aq.aqi_category;
+      document.getElementById("metricPm").textContent = `${aq.pm2_5 ?? "--"} / ${aq.pm10 ?? "--"} µg/m³`;
+      document.getElementById("metricBest").textContent = aq.cleanest_window_24h;
+      document.getElementById("metricPeak").textContent = aq.peak_smog_hour_24h;
+
+      document.getElementById("severitySummary").textContent = plan.severity_summary;
+      document.getElementById("healthAlert").textContent = plan.health_risk_alert;
+
+      // Render Routine
+      const routineEl = document.getElementById("routineList");
+      routineEl.innerHTML = plan.low_emission_daily_routine.map(step => `
+        <div class="p-3.5 rounded-xl bg-slate-950 border border-slate-800">
+          <div class="flex flex-wrap justify-between gap-2 mb-1">
+            <span class="text-xs font-bold text-teal-400">${step.time_window}</span>
+            <span class="text-xs font-semibold text-white">${step.activity}</span>
+          </div>
+          <p class="text-xs text-slate-300">${step.smog_adaptation}</p>
+          <p class="text-xs text-emerald-400/90 mt-1.5"><strong>Direct Impact:</strong> ${step.direct_impact_explanation}</p>
+        </div>
+      `).join("");
+
+      // Render IAQ Hacks
+      const iaqEl = document.getElementById("iaqList");
+      iaqEl.innerHTML = plan.indoor_air_quality_hacks.map((hack, i) => `
+        <label class="block p-3.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-teal-700 cursor-pointer transition">
+          <div class="flex items-start gap-2.5">
+            <input type="checkbox" checked class="hack-toggle mt-1 accent-teal-400" data-pct="${hack.estimated_indoor_pm25_reduction_pct}" onchange="recalculateImpact()" />
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-sm font-semibold text-white">${hack.title}</span>
+                <span class="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-teal-300">${hack.cost_tier}</span>
+              </div>
+              <p class="text-xs text-slate-300 mt-1">${hack.how_to_do_it}</p>
+              <p class="text-xs text-emerald-400 mt-1.5"><strong>-${hack.estimated_indoor_pm25_reduction_pct}% indoor PM2.5:</strong> ${hack.direct_health_impact}</p>
+            </div>
+          </div>
+        </label>
+      `).join("");
+
+      // Render Sustainable Swaps
+      const swapsEl = document.getElementById("swapsList");
+      swapsEl.innerHTML = plan.sustainable_alternatives.map((swap, i) => `
+        <label class="block p-3.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-teal-700 cursor-pointer transition">
+          <div class="flex items-start gap-2.5">
+            <input type="checkbox" checked class="swap-toggle mt-1 accent-teal-400" data-pm="${swap.monthly_pm25_avoided_grams}" data-co2="${swap.monthly_co2e_avoided_kg}" onchange="recalculateImpact()" />
+            <div class="w-full">
+              <div class="flex flex-wrap justify-between gap-2">
+                <span class="text-xs text-rose-300 line-through">${swap.current_habit}</span>
+                <span class="text-[11px] px-2 py-0.5 rounded bg-teal-950 text-teal-300 border border-teal-800">${swap.scale}</span>
+              </div>
+              <div class="text-sm font-semibold text-white mt-0.5">→ ${swap.sustainable_swap}</div>
+              <p class="text-xs text-slate-300 mt-1">${swap.why_it_matters_for_smog}</p>
+              <p class="text-xs text-teal-300 mt-1.5 font-medium">Avoids ~${swap.monthly_pm25_avoided_grams}g PM2.5 & ${swap.monthly_co2e_avoided_kg} kg CO₂e / month</p>
+            </div>
+          </div>
+        </label>
+      `).join("");
+
+      document.getElementById("communityNudge").textContent = plan.community_action_nudge;
+
+      document.getElementById("results").classList.remove("hidden");
+      document.getElementById("chatCard").classList.remove("hidden");
+      recalculateImpact();
+    }
+
+    document.getElementById("chatForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const input = document.getElementById("chatInput");
+      const q = input.value.trim();
+      if (!q) return;
+
+      const log = document.getElementById("chatLog");
+      log.innerHTML += `<div class="p-2 rounded bg-slate-800 text-white"><strong>You:</strong> ${q}</div>`;
+      input.value = "";
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            city: latestContext.city,
+            aqi_summary: latestContext.aqiSummary,
+            profile_summary: latestContext.profileSummary,
+            question: q,
+          }),
+        });
+        const data = await res.json();
+        log.innerHTML += `<div class="p-2 rounded bg-teal-950/60 border border-teal-900 text-slate-200"><strong>VayuSaathi:</strong> ${data.reply}</div>`;
+        log.scrollTop = log.scrollHeight;
+      } catch (err) {
+        log.innerHTML += `<div class="p-2 rounded bg-rose-950 text-rose-300">Error answering question.</div>`;
+      }
+    });
+</script>
+</body>
+</html>
